@@ -122,12 +122,12 @@ void GetGyroValues(void)
 			YawSamples += ADC(ADC_CH_YAW);
 		}	
 		// average 
-		RollSamples  += avg/2;
-		RollSamples  /= avg;
-		PitchSamples += avg/2;
-		PitchSamples /= avg;
-		YawSamples   += avg/2;
-		YawSamples   /= avg;
+		RollSamples  += HEAVY_GYRO_AVG/2;
+		RollSamples  /= HEAVY_GYRO_AVG;
+		PitchSamples += HEAVY_GYRO_AVG/2;
+		PitchSamples /= HEAVY_GYRO_AVG;
+		YawSamples   += HEAVY_GYRO_AVG/2;
+		YawSamples   /= HEAVY_GYRO_AVG;
 }
 #else
 	RollSamples =ADC(ADC_CH_ROLL);
@@ -184,14 +184,14 @@ void CalcGyroValues(void)
 	Roll_Rate_8 = (char) (RollRate10/4);	// Roll_Rate_8  has Delta Theta of roll axis in 8 bit representation  
  
 	
-	// Erection of angle + compensation for errors from ADC  quantization and BIAS drift
+	
 	Roll_Angle += LRIntKorr;
 	
 // Pitch
 	Pitch_Angle +=  PitchRate10;		// Integrate rate of roll into angle
 	Pitch_Rate_8 = (char)  (PitchRate10/4);	 // Use 8 bit for PD
 
-	// Erection of angle + compensation for errors from ADC  quantization and BIAS drift
+	// Application of error correction. see Read_Accel() for discussion
 	Pitch_Angle += FBIntKorr;
 
 // Yaw
