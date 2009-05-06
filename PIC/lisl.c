@@ -143,8 +143,57 @@ void GetEvenValues(void)
 	NeutralFB = (char) Nl;
 }
 
-// read all acceleration values from LISL sensor
-// and compute correction adders (Rp, Np, Vud)
+/* Roll and Pitch error compensation discussion:
+   ---------------------------------------------
+  The roll and pitch angles, integrated from the gyro rates, suffer from 3 different erros:
+  
+  A.) Bias drift in the gyro itself. This is a thermal unstability inherent of the rate sensor
+      devices, basically the voltage that the device outputs while not in motion varies with 
+      temperature. This causes a slow drift in the integrated angle. Devices such a the Melexis
+      part have an active temp compensation built in and the error is calibrated out at the 
+      factory to a great extent. 
+  
+  B.) Quantization errors in the ADC. Basically this means not enough bits in the ADC. Erros 
+ 	  arrive because for example the ADC can not measure the gyros bias voltage (0 motion) 
+ 	  absolutely preciisely and looses 1/2 lbs when the output change. This can be helped by 
+ 	  a heavy handed oversampling of the rate readings and averaging the readings. This is 
+ 	  is probably the smallest error of the 3.
+ 	  
+  C.) Frame of reference translation error. This error arises from the fact that this SW 
+      implementation doesn't translate the 3 gyros angles into an earth frame of reference
+      first, but instead directly uses the body angles (body frame of referecne). This works
+      as long as there are no compound motions where all 3 axes change at the same time. 
+      To understand the nature of this considering the following exaturated case:
+      
+       1.) Pitch up 90 deg,  	body pitch angle is now +90 deg
+       2.) Roll right 90 deg, 	body roll angle is now +90 deg 
+       3.) Pitch down 90 deg,  
+       
+       The bodys pitch angle is now 0 again, BUT the bodys roll angle is still at +90 deg !!
+       What should have happeened was a translation of the roll change into a Yaw change when
+       the craft rolled while pointing straight up. The above is the extreme case, but the effect
+       is present whenever rolling and pitching at the same time, i.e. in the case of a QC almost
+       always. Out of the three this is the biggest error when the craft is manouvering or even 
+       when simply beeing buffeted by wind. 
+       
+       This math involved to translate between frames of reference is not trivial and involves 
+       trigonometry and/or vector match in the form of quaternions. Needless to say that a lowly
+       8 bit PIC would be overwhelmed by it.  
+       
+   To counteract the above errors a simple erection scheme is used to bring the roll and pitch angles
+   back to the earth, i.e. gravity frame of reference. This is done my driving the body angle toward zero
+   whenever the associated accelerometer reads within a narrow band around level. This of course has it's 
+   own problems, in that the accel can be fooled into reading level because of centrifugal forces as they 
+   would occur in a "coordinated" turn around a point. This beeing not a winged craft one is less likely to
+   actually perform a coordinated turn, and thus this solution seems adeqate.  Other solutions where tried 
+   where the angle and the accel reading had to coincide within a deadband in order for the compensation to
+   take effect. This however had the problem that once coincedence was lost there was no way for the 
+   compensation to regain it again, sort of a catch 22. 
+*/   
+  
+       
+       
+// Read Accel values and formulate gyro error compensation
 void ReadAccel(void)
 {
 	int16 tmp;
@@ -180,31 +229,31 @@ void ReadAccel(void)
 	Tp.I -= 1024;	// subtract 1g
 
 // =====================================
-// Roll-angle erection / drift compensation 
+// Roll-angle erection / error compensation 
 // =====================================
-	tmp = Rp.I - ((Roll_Angle * 11) / 128);	// sacle to accel 
+	tmp = Rp.I;// - ((Roll_Angle * 11) / 128);	// sacle to accel 
 
 	if ( tmp > -CompDeadBand && tmp < CompDeadBand )
 	{
-		LRIntKorr = CompDecay;
-		
-		if (Roll_Angle > 0 )		// drive towards 0 angle 
-			LRIntKorr *= -1;
+		if (Roll_Angle > 0 )		// drive angle towards 0 
+			LRIntKorr = -CompDecay;
+		else
+			LRIntKorr = CompDecay;
 	}
 	else 
 		LRIntKorr = 0;
 
 // =====================================
-// Pitch-Angle  erection / drift compensation 
+// Pitch-Angle  erection / error compensation 
 // =====================================
 	tmp = Np.I ; // - ((Pitch_Angle * 11) / 128);
 	
 	if ( tmp> -CompDeadBand && tmp < CompDeadBand )
 	{
-		FBIntKorr = CompDecay;
-		
-		if (Pitch_Angle > 0 )		// drive towards 0 angle 
-			FBIntKorr *= -1;
+		if (Pitch_Angle > 0 )		// drive angle towards 0 
+			FBIntKorr = -CompDecay;
+		else
+			FBIntKorr = CompDecay;
 	}
 	else 
 		FBIntKorr = 0;	
