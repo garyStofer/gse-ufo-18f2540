@@ -188,6 +188,8 @@ extern int8 volatile RxSignalOK;	// count number of bad RX frames or loss of sig
 #define BiasZeroAvgCount 64
 
 // fixed  dt in PID loop
+// chaning this causes the deck angles to change in magnitude because dt is not take into account 
+// in the math 
 #define PID_LOOP_DELAY 10
 
 
@@ -229,7 +231,7 @@ extern void InitADC(void);
 #define _EESet2	0x20	// second set starts at address 0x20
 
 // Gyro Erection and drift compensation 
-#define CompDeadBand 	30		// band within Gyro erection is active 
+#define CompDeadBand 	40		// band within Gyro erection is active 
 #define CompDecay	4			// number of counts the angle is driver to 0 within the deadband. i.e speed of correction
 
 
