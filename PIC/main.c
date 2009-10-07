@@ -176,20 +176,20 @@ void main(void)
 		PWM_Pause = Interval_time;  		
 		BiasZeroCount = BiasZeroAvgCount;	// do n cycles to find integral zero point
 		ThrDownCount = THR_DOWNCOUNT;
-		PID_Delay = 0;
-		RxSignalOK = 3;						// after n losses of remote signal go into hover down mode
+		RxSignalLost = RxFrameErr = PID_Delay = 0;
 
 			
-		while(2)	// until  reset , power off , or RX dropoutcount is reached
+		while(2)	// until  forever
 		{
 			
 			PID_Sleep();		// Sleeps until the PID delay is expired..  ISR managed counter based on Tmr0 -- 
 								// Jitter free, not affected by execution  time of code in PID loop
+		
+			if ( _NoSignal || RxFrameErr >= 4)
+					RxSignalLost = 1;
 
-			if ( RxSignalOK ) 
-				GetInputCH();   // copy the input channels into the IK vars 
-			else	
-			{
+			if ( RxSignalLost ) //  comulative missed frames
+			{           						// Auto let down mode
 				Beeper_ON;
 				LedBlue_ON;
 				if ( DropCount++ > 16 )	 	// speed of let down
@@ -206,7 +206,12 @@ void main(void)
 				IRoll = RollNeutral;	// these are the values that where recorded upon takeoff and represent trimmed stick values
 				IPitch = PitchNeutral;
 				IYaw = YawNeutral;
-			}		
+			}
+			else
+			{
+				GetInputCH();   // copy the input channels into the IK vars 
+			}
+				
 
 			GetGyroValues();	// first thing after sleep so that there is not jitter  in dt.
 			ReadAccel(); 		// Read the accel  and  compute the correction factors 
@@ -219,7 +224,7 @@ void main(void)
 
  			
 
-			if( _UseCompass  )	// enter every 4th scan
+			if( _UseCompass  )	
 				GetDirection();	// read compass sensor
 
 			if( _UseBaro )
@@ -240,7 +245,7 @@ void main(void)
 				ThrDownCount = THR_DOWNCOUNT;
 				InitGlobals();	// resets _Flying flag!  All  angles are set to 0 in here   !!  ASSUMING LEVEL !! ground of UAVP 
 				
-				BiasZeroCount = BiasZeroAvgCount;	// do 16 cycles to find integral zero point
+				BiasZeroCount = BiasZeroAvgCount;	// do "n" cycles to find integral zero point
 				RollBias = PitchBias = YawBias = 0;	// gyro neutral points
 
 				All_Leds_Off();
