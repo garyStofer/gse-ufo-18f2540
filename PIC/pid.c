@@ -58,6 +58,10 @@ return;
 	t = (((Roll_Angle/4) * (long) RollIntFactor) / 256);
 	t = (t>127) ? 127 : ((t < -127) ? -127 :t);		// limit to 8 bits
 	Rl +=  t;
+	
+#ifdef GYRO_150	// For 150 deg/sec gyros divide by 2 to have the same gain 
+	Rl /= 2;
+#endif	
 
 	// Add stick signal
 	Rl += IRoll;
@@ -76,7 +80,10 @@ return;
 	t = (((Pitch_Angle/4) * (long) PitchIntFactor) / 256);
 	t = (t>127) ? 127 : ((t < -127) ? -127 :t);		// limit to 8 bits
 	Nl +=  t ;	
-
+	
+#ifdef GYRO_150	// For 150 deg/sec gyros divide by 2 to have the same gain 
+	Nl /= 2;
+#endif	
 	// Add  stick signal
 	Nl += IPitch;
 	
@@ -99,11 +106,18 @@ return;
 
 	t = ((( Yaw_Angle/4) * (long) YawIntFactor) / 256 );
 	t = (t>127) ? 127 : ((t < -127) ? -127 :t);		// limit to 8 bits 
-	Tl += t;
-
+	Tl += t; 
+#ifdef GYRO_150	// For 150 deg/sec gyros divide by 2 to have the same gain 
+	Tl /= 2;
+#endif	
 // limit Maximum Yaw rate to something slow enough for the human 	
 	if( Tl < -YawLimit ) Tl = -YawLimit;
 	if( Tl > YawLimit ) Tl = YawLimit;
+	
+//  TODO:
+// since the yaw stick signal is already added dividing here by 2 to compensate for Gyro 150 scale factor is 
+// maybe not the right thing to do.
+// For now turn the gains down in the UAVPset program.	
 
 }
 
