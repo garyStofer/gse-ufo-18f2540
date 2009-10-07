@@ -26,12 +26,10 @@ void WriteEE(uns8 addr, int8 d)
 		EECON1bits.EEPGD = false;
 		EECON1bits.WREN = true;
 
-//		DisableInterrupts; ?? Ask Greg why he has this
 		EECON2 = 0x55;
 		EECON2 = 0xaa;
 		EECON1bits.WR = true;
 		while(EECON1bits.WR);
-//		EnableInterrupts;
 
 		EECON1bits.WREN = false;
 	}
