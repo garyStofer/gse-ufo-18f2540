@@ -118,7 +118,7 @@ uns8 RX_Num_Channels ;			// This stores the number of channels decoded in a fram
 
 uns8 volatile PID_Delay;		// Count down var for PID timing.   ISR counts down to 0 at 1ms intervals -- 
 								// outside code sets var and sleeps until counted down	
-int8 volatile RxSignalOK;		// count number of bad RX frames or loss of signal 																
+uns8 volatile RxFrameErr;		// count number of bad RX frames or loss of signal 																
 
 #pragma interrupt high_isr_handler
 void high_isr_handler(void)
@@ -245,7 +245,7 @@ void low_isr_handler (void)
 			// Check that the Sync Pause is less than 16 ms
 	
 
-			if (( tmpRXCh_Val[4] < 40 ||  tmpRXCh_Val[4] > 200 )  && temp.I < MAX_RX_SYNC_PAUSE)
+			if (( tmpRXCh_Val[4] < 50 ||  tmpRXCh_Val[4] > 190 )  && temp.I < MAX_RX_SYNC_PAUSE)
 			{  
 #ifdef MY_RX_CH_NUM 				
 				if ( RX_Num_Channels == MY_RX_CH_NUM )
@@ -266,17 +266,15 @@ void low_isr_handler (void)
 				}
 				else
 				{	
-					if (RxSignalOK)
-						RxSignalOK--; 
-						
-					_NoSignal = 1;
+					_NoSignal = 1; 	
+					if ( RxFrameErr < 20 ) // so it doesn't wrapp around
+						RxFrameErr++;	
 				}	
 			}else
-			{	
-				if (RxSignalOK)
-					RxSignalOK--; 
-					
-				_NoSignal = 1;
+			{
+				_NoSignal = 1; 		
+				if ( RxFrameErr < 20 ) // so it doesn't wrapp around
+					RxFrameErr++;
 			}	
 
 			
@@ -318,10 +316,7 @@ void low_isr_handler (void)
 	if ( PIR1bits.TMR1IF )
 	{
 		RX_Num_Channels = 0;
-	
-		if (RxSignalOK)
-			RxSignalOK--; 
-			
+
 		_NoSignal = 1; 	// 130 ms of silence from the RX signal indicates that we have no signal 
 		PIR1bits.TMR1IF=0;
 	}
