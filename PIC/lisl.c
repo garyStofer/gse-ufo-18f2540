@@ -191,7 +191,7 @@ void GetEvenValues(void)
    compensation to regain it again, sort of a catch 22. 
 */   
   
-       
+  float Acc_Z, Acc_X, Acc_Y;
        
 // Read Accel values and formulate gyro error compensation
 void ReadAccel(void)
@@ -224,6 +224,9 @@ void ReadAccel(void)
 	Rp.I -= MiddleLR;
 	Tp.I -= MiddleUD;
 	Np.I -= MiddleFB;
+	Acc_X = (float)  Np.I /1024.0; 
+	Acc_Y = (float) Rp.I / 1024.0;
+	Acc_Z=  (float) Tp.I /1024.0;
 	
 // This is flawed -- -1G is only correct if perfectly level 
 	Tp.I -= 1024;	// subtract 1g
