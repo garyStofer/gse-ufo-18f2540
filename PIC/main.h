@@ -30,7 +30,10 @@
 
 // for heavy Gyro Rate filtering -- number of averages has to be validated with Scope, 
 // so that there is still some loop idle time in PID_Deleay()
+// Warning: no more than 32 or the summing int16 mightoverflow
 // #define HEAVY_GYRO_AVG 25
+// #define GYRO_150
+// #define PITCH_ROLL_TIED_KLUDGE
 
 // Define this when full PPM train is present at TP3 -- Undefine for wired OR mixing of odd channels  
 #define RX_PPM
@@ -160,7 +163,7 @@ extern volatile uns8 TimeTick1ms;
 extern volatile uns8 PID_Delay;
 extern volatile uns8 RXCh_Val[MAX_RX_CH];
 extern uns8 RX_Num_Channels;		// This stores the number of channels decoded in a frame -- might be useful to outside code 
-extern int8 volatile RxSignalOK;	// count number of bad RX frames or loss of signal 	
+extern uns8 volatile RxFrameErr;	// count number of bad RX frames or loss of signal 	
 
 
 // Based on: TMR0 at 4us and terminal count of: 0xff == 256 * 4 us = 1.024ms 
@@ -185,7 +188,10 @@ extern int8 volatile RxSignalOK;	// count number of bad RX frames or loss of sig
 
 
 // number of samples to average to get the Gyros bias voltage
+// Warning: No more than 64 otherwise the summing int16 will overflow
 #define BiasZeroAvgCount 64
+
+
 
 // fixed  dt in PID loop
 // chaning this causes the deck angles to change in magnitude because dt is not take into account 
