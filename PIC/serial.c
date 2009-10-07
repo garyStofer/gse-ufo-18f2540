@@ -342,13 +342,14 @@ void ProcessComCommand(void)
 				ee_addr =_EESet1;
 			WriteEE(ee_addr + (uns16)addr, d);
 
-	// Kludge to make roll and pitch PID values the same  
+#ifdef PITCH_ROLL_TIED_KLUDGE  
 			if ( addr == pitchKp)
 				WriteEE(ee_addr + (uns16)rollKp, d);
 			if ( addr == pitchKi)
 				WriteEE(ee_addr + (uns16)rollKi, d);
 			if ( addr == pitchKd)
 				WriteEE(ee_addr + (uns16)rollKd, d);
+#endif				
 		
 // TODO: this needs to be cleaned up, but for now just cross the parameters that should be the same 
 // in both setups over to the other set
