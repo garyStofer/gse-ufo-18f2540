@@ -197,6 +197,9 @@ void CalcGyroValues(void)
 // Yaw
 	// 10 bit Samples added up + 8 bit IYaw input from stick 
 	YawRate10 += IYaw;  // Add in Stick input here so that the Yaw Angle can be drivern back to 0 by the yaw control to the motors	
+#ifdef GYRO_150	// For 150 deg/sec gyros divide by 2 to have the same gain 
+	YawRate10 += IYaw;  // add tvice so that entire product can be divided by 2 later
+#endif
 	Yaw_Angle += YawRate10; // the +- 32K allows for a +- 270 degree variation of the Yaw angle. Since Yaw angle is used to hold heading and the control loop drives it back to 0 this is not a problem 
 	Yaw_Rate_8 = (char) (YawRate10/4);	 // use 8 bit for PD
 
