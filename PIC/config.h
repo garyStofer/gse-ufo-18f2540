@@ -28,9 +28,7 @@
 #pragma	config WRTD = OFF      	// Data EEPROM Write Protection 
 #pragma	config WRTC = OFF  		// Configuration Register Write Protection
 #pragma	config WRTB = OFF 		// Boot Block Write Protection bit:
-
-//#ifdef ICD2_DEBUG
-#pragma config DEBUG = ON  
-//#else
-//#pragma config DEBUG = OFF
-//#endif
+#pragma config DEBUG = OFF  	// Must be off otherwise won't run whe programmed with standalone programmer
+								// The IDE automatically turns this on when running under the debugger
+								
+								
