@@ -34,6 +34,7 @@
 // #define HEAVY_GYRO_AVG 25
 // #define GYRO_150
 // #define PITCH_ROLL_TIED_KLUDGE
+// #define Scope_PID_idle_time			// enables scope probe on RC0 -- Q4, "fallshirm" so that the PID IDLE time can be measured
 
 // Define this when full PPM train is present at TP3 -- Undefine for wired OR mixing of odd channels  
 #define RX_PPM
@@ -155,9 +156,11 @@ extern		int8	CurDeviation;	// deviation from correct heading
 
 // From irq.c 
 #define MAX_RX_CH 9
+#define MAX_OUT_CH 8		// All PWM out CH are on PortB, RB6 & RB7 are not available when programmed with Debugger,
+//#define MAX_OUT_CH 6	
 #define MIN_RX_SYNC_PAUSE 1250  // 1250 *4us = 5ms  
 #define MAX_RX_SYNC_PAUSE 4000  //  4000 *4us = 16  ms
-extern volatile uns8 PWM_Val[6];	// These vars should be volatile but ccx5 compiler doesn't know that keyword
+extern volatile uns8 PWM_Val[10];	
 extern volatile uns8 PWM_Pause;
 extern volatile uns8 TimeTick1ms;
 extern volatile uns8 PID_Delay;

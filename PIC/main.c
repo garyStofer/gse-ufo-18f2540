@@ -4,21 +4,26 @@
 #include "math.h"
 
 void main(void)
-{
+{  
 	uns8	DropCount;		// to lower gas slowy upon latched TX signal loss 
 	uns8	LowGasCount;
 	uns8	LedCount;
 	uns8 	RxSignalLost;
 	
 
-	
 	// general ports setup
 	TRISA = 0b00111111;	// all inputs
 	
 	InitADC();			// Setup ADC clock and mode etc
-	
-	PORTB = 0b11000000;	// all outputs to low, except RB6 & 7 (I2C)!
-	TRISB = 0b01000000;	// all servo and LED outputs
+
+// The setup below would be used if Magnetometer I2C is needed  	
+//	PORTB = 0b11000000;	// all outputs to low, except RB6 & 7 (I2C)!
+//	TRISB = 0b01000000;	// all servo and LED outputs
+
+	// This setup is used to gain two more Servo PWM signals on RB6 and RB7 
+	// Note: Signals are not present when programmed via debug mode 
+	PORTB = 0b00000000;	// All Low initially 
+	TRISB = 0b00000000;	// All outputs -- Servo PWMs
 
 	PORTC = 0b01100000;	// all outputs to low, except TxD and CS
 	TRISC = 0b10000100;	// RC7, RC2 are inputs
@@ -58,7 +63,7 @@ void main(void)
 	PIE1bits.TMR1IE = 1;
 
 	// Capture 
-	CCP1CON = 0b00000100;	// capture mode every falling edge
+	CCP1CON = 0b00000100;	// capture mode: every falling edge
 	PIE1bits.CCP1IE = 1;
 	
 // Timer2 setup   ~~~~~~~~~~~~~~~ Used for PWM generation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -75,7 +80,7 @@ void main(void)
 	// Setting up interrupt priorities 
 	RCONbits.IPEN =1;			// Priority schema 
 	INTCON2bits.TMR0IP  = 1;	// timer 0 == high interrup priority , used for 1ms tick used inPWM 
-	IPR1bits.CCP1IP 	= 0;    // Capture 1 interrup = low Priority		used for RX signal capture 
+	IPR1bits.CCP1IP 	= 0;    // Capture 1 interrup = low Priority	used for RX signal capture 
 	IPR1bits.TMR1IP		= 0;	// and timer 1 overflow = low priority 	used for RX signal timeout
 	IPR1bits.TMR2IP     = 1;	// High Priortity -- PWM variable part 	
 	
@@ -134,10 +139,10 @@ void main(void)
 		do 	// Wait for RX signal and throttle closed
 		{			
 			ReadParametersEE(); 	//needed here becuase the ProcessComCommand needs to know IK5 --  
-			_NoSignal = 1;			// Reset so that we are sure that in the last 30ms a valid frame arrived
+			_NoSignal = 1;			//Reset so that we are sure that in the last 30ms a valid frame arrived
 			Delay_ms(30);
 
-			LedGreen_TOG;    // quick feedback to indication SW is waiting for the right strting conditions
+			LedGreen_TOG;    // quick feedback to indication SW is waiting for the right starting conditions
 			
 			GetInputCH();   // copy the input channels into the IK vars -- needed for IGas only in here 		
 			
@@ -213,7 +218,7 @@ void main(void)
 			}
 				
 
-			GetGyroValues();	// first thing after sleep so that there is not jitter  in dt.
+			GetGyroValues();	// first thing after sleep so that there is not jitter in 'dt'.
 			ReadAccel(); 		// Read the accel  and  compute the correction factors 
 			CalcGyroValues();	// makes 8 bit  Gyro ADC values  integrates samples into Roll_Angle, Pitch_Angle.Yaw_Angle applies correction factors to angles 
 
