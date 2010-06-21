@@ -13,6 +13,8 @@ void SetMotorsOff( void )
 	
 	PWM_Val[4] = _Neutral_Out;
 	PWM_Val[5] = _Neutral_Out;
+	PWM_Val[6] = _Neutral_Out;
+	PWM_Val[7] = _Neutral_Out;
 }
 // assignes and converts the eaw RX channel data to logical channel vars
 // applies dual rate to yaw & pitch ( 100% or 50%)
@@ -57,9 +59,20 @@ void OutSignals(void)
 	PWM_Val[3] = M_front;
 	PWM_Val[4] = MCamRoll;
 	PWM_Val[5] = MCamPitch;
+	PWM_Val[6] = RXCh_Val[7];	// Pass through Ch 8 of Radio to RB6 for Camera ON/OFF/trigger servo
+	PWM_Val[7] = RXCh_Val[8];	// Pass through Ch 9 of Radio to RB7 for push button trigger
+
+// Also output CH9 trigger button in digital form -- wired to Parachute trigger Q4, i.e. trigger for Cannon USB trigger
+#ifndef Scope_PID_idle_time
+	if (RXCh_Val[8] > 0x80 )
+		PORTCbits.RC0 =1;
+	else
+		PORTCbits.RC0 =0;	
+#endif
+	
 }
 
-void Delay_ms( uns8 ms_dur)	//Note: can only do delay up 255 ms 
+void Delay_ms( uns8 ms_dur)	//Note: can only do delay up to 255 ms 
 {
 	uns8 t_end;
 	t_end = TimeTick1ms + ms_dur; 	 
@@ -70,12 +83,16 @@ void Delay_ms( uns8 ms_dur)	//Note: can only do delay up 255 ms
 
 void PID_Sleep( void )		// 1.024 ms interrupt counts PID_Delay down 
 {
-PORTCbits.RC0 =1;  			// Scope probe to measure the loop idle time
+#ifdef Scope_PID_idle_time	
+	PORTCbits.RC0 =1;  			// Scope probe to measure the loop idle time
+#endif	
 	while (PID_Delay  )  	// wait here until delay time is up 
 	{ /* wait */ }
 
 	PID_Delay = PID_LOOP_DELAY; 	// reset Delay ( in ms )
-PORTCbits.RC0 =0;
+#ifdef Scope_PID_idle_time
+	PORTCbits.RC0 =0;
+#endif	
 } 
 
 // Read battery voltage 
@@ -168,7 +185,7 @@ void GetGyroValues(void)
 	}	
 }
 
-//integrates Gyro rates into angles and applies gyro drift correction from the accel readings
+// Integrates Gyro rates into angles and applies gyro drift correction from the accel readings
 // Angles for 90deg rotation = ~12000 counts in  RollAngle or PitchAngle vars
 void CalcGyroValues(void)
 {
@@ -196,10 +213,11 @@ void CalcGyroValues(void)
 
 // Yaw
 	// 10 bit Samples added up + 8 bit IYaw input from stick 
-	YawRate10 += IYaw;  // Add in Stick input here so that the Yaw Angle can be drivern back to 0 by the yaw control to the motors	
-#ifdef GYRO_150	// For 150 deg/sec gyros divide by 2 to have the same gain 
-	YawRate10 += IYaw;  // add tvice so that entire product can be divided by 2 later
+#ifdef GYRO_150			
+	YawRate10 /=2;  	// for 150deg gyro /2,so that YawRate10 for 150 and 300 deg gyros is at the same scale 
 #endif
+	YawRate10 += IYaw;  // Add in Stick input here so that the Yaw Angle can be driven back to 0 by the yaw control to the motors
+	
 	Yaw_Angle += YawRate10; // the +- 32K allows for a +- 270 degree variation of the Yaw angle. Since Yaw angle is used to hold heading and the control loop drives it back to 0 this is not a problem 
 	Yaw_Rate_8 = (char) (YawRate10/4);	 // use 8 bit for PD
 

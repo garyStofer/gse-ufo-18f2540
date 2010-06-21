@@ -30,8 +30,8 @@
 
 // Discussion: Output PWM creation with TMR0 and TMR2
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// The following ISR creates 6 output signals that are pulse with modulated between 1 and 2 ms each. The
-//  generation of the pulses is governed by the hardware timers TMR0 and TMR2 arranged in a cascading way. 
+// The following ISR creates 6 output signals that are pulse width modulated between 1 and 2 ms each. The
+// generation of the pulses is governed by the hardware timers TMR0 and TMR2 arranged in a cascading way. 
 // The resulting output pulses start at increments of 1ms  and therefore the max PWM repeat rate is 6ms. 
 // TMR0  is used to  time the initial 1ms of each pulse, TMR2 is then used to time the variable portion of each pulse, 
 // therefore TMR0 starts the pulse output for a particular channel  while TMR2 terminates it. 
@@ -109,7 +109,7 @@ static uns8 RXCh_Ndx;	// An index into the RXCh_Val[]
 
 
 uns8 volatile TimeTick1ms;  	// maintain a 1 ms tick counter for delay / wait functions outside of ISR 
-uns8 volatile PWM_Val[6];  		//
+uns8 volatile PWM_Val[10]; 		// array must be same or bigger than MAX_OUT_CH 
 uns8 volatile PWM_Pause;	 	// Time added in between PWM to slow down the repeat rate of the Output signals 
 uns8 volatile RXCh_Val[MAX_RX_CH]; 	// 9 channels + pause
 static uns8   tmpRXCh_Val[MAX_RX_CH];
@@ -142,7 +142,7 @@ void high_isr_handler(void)
 		// First keep time and setup for the next interrupt again
 		TimeTick1ms++;	// This is the timetick that seves as timebase throughout 
 	
-		if (PID_Delay)  // utside PID sleeps until PID_Delay becomes 0, then sets new delay and executes PID loop
+		if (PID_Delay)  // outside PID sleeps until PID_Delay becomes 0, then sets new delay and executes PID loop
 			PID_Delay--;
 	
 		
@@ -155,14 +155,15 @@ void high_isr_handler(void)
 		{
 			if (Ch_On == 0)		 // out of Pause
 			{
-				Ch_On = 1;		 // Start at CH one again
+				Ch_On = 1;		 // Start at CH "One" again
 				Ch_Ndx = 0;
 			}	
 			else
 				Ch_On <<= 1; 	 // advance to the next channel to be turned on 
 			
 			
-			if (Ch_On & 0x40) 	 // one past the last channel -- either pause or wrap around to first ch 
+			// All channels have been generated -- enter Pause 
+			if (Ch_Ndx >= MAX_OUT_CH-1)
 			{
 				Pause = PWM_Pause;
 				Ch_On = 0;
@@ -173,7 +174,7 @@ void high_isr_handler(void)
 		}
 
 
-		if (Ch_Off )			// If there is something to be turned off , i.e. not in Pause setup TMR2 
+		if (Ch_Off )			// If there is something to be turned off , i.e. not in Pause, then setup TMR2 
 		{
 			TMR2 =0; 			 //Important this Resets the postscalar !! 
 			PR2=PWM_Val[Ch_Ndx]; // Setup timeout AFTER resetting TMR2
@@ -187,15 +188,6 @@ void high_isr_handler(void)
 		INTCONbits.T0IF = 0;       // and erase our Timer0 interrup flag for next interrupt	
 	}
 
-// The us timer	
-/*
-	if (  PIR2bits.TMR3IF )
-	{
-		T3CONbits.TMR3ON = 0;
-		PIE2bits.TMR3IE = 0;
-		PIR2bits.TMR3IF = 0;
-	}
-*/
 }
 
 
