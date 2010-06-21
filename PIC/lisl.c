@@ -145,7 +145,7 @@ void GetEvenValues(void)
 
 /* Roll and Pitch error compensation discussion:
    ---------------------------------------------
-  The roll and pitch angles, integrated from the gyro rates, suffer from 3 different erros:
+  The roll and pitch angles, integrated from the gyro rates, suffer from 3 different errors:
   
   A.) Bias drift in the gyro itself. This is a thermal unstability inherent of the rate sensor
       devices, basically the voltage that the device outputs while not in motion varies with 
@@ -263,7 +263,7 @@ void ReadAccel(void)
 		
 UpDown_Velocity = 0;
 
-// this is all flawed because all three axes need to ve considered to extract the Z acceleration from 
+// this is all flawed because all three axes need to be considered to extract the Z acceleration from 
 
 // UpDownVelocity integrates  up down acceleration  == up down velocity 
 // The Up down stuf doesn't work  See comments in MixANdLimit
