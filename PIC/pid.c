@@ -95,7 +95,7 @@ return;
 // ##############  YAW  ######################
 // Apply Integral factor 
 // stick input IYaw is added to Gyro YawSamples first  and then integrated into Yaw_Angle 
-// so that the angle in the end stays at 0 during a yaw turn  
+// so that the angle in the end stays at 0 during a turn  
 
 //Apply  Derivative factor 
 	Tl  = (Yaw_Rate_8_prev - Yaw_Rate_8 ) * (int16) YawDiffFactor;
@@ -107,17 +107,12 @@ return;
 	t = ((( Yaw_Angle/4) * (long) YawIntFactor) / 256 );
 	t = (t>127) ? 127 : ((t < -127) ? -127 :t);		// limit to 8 bits 
 	Tl += t; 
-#ifdef GYRO_150	// For 150 deg/sec gyros divide by 2 to have the same gain 
-	Tl /= 2;
-#endif	
+	
 // limit Maximum Yaw rate to something slow enough for the human 	
 	if( Tl < -YawLimit ) Tl = -YawLimit;
 	if( Tl > YawLimit ) Tl = YawLimit;
 	
-//  TODO:
-// since the yaw stick signal is already added dividing here by 2 to compensate for Gyro 150 scale factor is 
-// maybe not the right thing to do.
-// For now turn the gains down in the UAVPset program.	
+	
 
 }
 
