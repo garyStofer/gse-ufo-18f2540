@@ -54,17 +54,17 @@
 
 #define LedRed_ON		SwitchLedsOn(LedRed);
 #define LedBlue_ON		SwitchLedsOn(LedBlue);
-#define LedGreen_ON		SwitchLedsOn(LedGreen);
+#define LedGreen_ON		SwitchLedsOn(LedGreen+LedAUX2);
 #define LedYellow_ON	SwitchLedsOn(LedYellow);
 #define LedAUX1_ON		SwitchLedsOn(LedAUX1);
 #define LedAUX2_ON		SwitchLedsOn(LedAUX2);
 #define LedAUX3_ON		SwitchLedsOn(LedAUX3);
 #define LedRed_OFF		SwitchLedsOff(LedRed);
 #define LedBlue_OFF		SwitchLedsOff(LedBlue);
-#define LedGreen_OFF	SwitchLedsOff(LedGreen);
+#define LedGreen_OFF	SwitchLedsOff(LedGreen + LedAUX2);
 #define LedYellow_OFF	SwitchLedsOff(LedYellow);
 #define LedRed_TOG		ToggleLeds(LedRed);
-#define LedGreen_TOG	ToggleLeds(LedGreen);
+#define LedGreen_TOG	ToggleLeds(LedGreen+LedAUX2);
 #define LedYellow_TOG	ToggleLeds(LedYellow);
 #define LedBlue_TOG		ToggleLeds(LedBlue);
 #define Beeper_OFF		SwitchLedsOff(Beeper);
