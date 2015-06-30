@@ -20,7 +20,7 @@ void SetMotorsOff( void )
 // applies dual rate to yaw & pitch ( 100% or 50%)
 void GetInputCH( void )
 {	// do channel  assignenment in here 
-	
+	unsigned short tmp;
 	if (_NoSignal)
 		return;
 		
@@ -43,20 +43,34 @@ void GetInputCH( void )
 	IK6   = RXCh_Val[5];		
 	IK7   = RXCh_Val[6];
 	
-	if ( DoubleRate )
+
+	// Reduce the remote control input by 2 or 4 to make the control less sensitive
+	if ( HalfRate )
 	{
-		IRoll = IRoll/2;
-		IPitch = IPitch/2;
-	}		
+		IRoll /= 4;
+		IPitch /= 4;
+		IYaw /= 4;
+	}	
+	else
+	{
+		IRoll /= 2;
+		IPitch /= 2;
+	
+	}
+	// Make throttle curve parabolic 
+	tmp = IGas;
+	tmp = tmp*tmp/250; 
+	IGas = (tmp >250) ?250: tmp; 	
+		
 }
 
 // Copies the Motor and servo PWM number to the array for the ISR PWM generation
 void OutSignals(void)
 {	
-	PWM_Val[0] = M_rear;
-	PWM_Val[1] = M_left;
-	PWM_Val[2] = M_right;
-	PWM_Val[3] = M_front;
+	PWM_Val[0] = M_rear;  // X-mode Rear-Right
+	PWM_Val[1] = M_left;  // X-mode Rear-Left
+	PWM_Val[2] = M_right; // x_mode Front-Right
+	PWM_Val[3] = M_front; // X-mode Front-Left
 	PWM_Val[4] = MCamRoll;
 	PWM_Val[5] = MCamPitch;
 	PWM_Val[6] = RXCh_Val[7];	// Pass through Ch 8 of Radio to RB6 for Camera ON/OFF/trigger servo

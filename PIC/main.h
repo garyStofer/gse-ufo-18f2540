@@ -131,7 +131,7 @@ extern		int8	BaroThrottleDiff;	// 28
 #define FlyCrossMode 	(ConfigParam & 0b00000001)
 #define FutabaMode		(ConfigParam & 0b00000010)
 #define IntegralTest	(ConfigParam & 0b00000100)
-#define DoubleRate		(ConfigParam & 0b00001000)
+#define HalfRate		(ConfigParam & 0b00001000)
 #define NegativePPM		(ConfigParam & 0b00010000)
 #define CompassTest		(ConfigParam & 0b00100000)
 

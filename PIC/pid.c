@@ -124,6 +124,7 @@ return;
 void MixAndLimit(void)
 {
 	int16 min;
+	int16 A,B;
 	
 	if(	BiasZeroCount > 0 ) // wait until the gyro Bias is measured
 		return;
@@ -140,16 +141,44 @@ Tl = IYaw;
 #ifndef TRICOPTER
 	if( FlyCrossMode )
 	{	// "Cross" Mode
-// TODO: figure out how the Rl, NL limiting needs to be 	
-		Ml = IGas + Nl;		Ml -= Rl;
-		Mr = IGas - Nl;		Mr += Rl;
-		Mv = IGas - Nl;		Mv -= Rl;
-		Mh = IGas + Nl;		Mh += Rl;
+// mix pitch and roll inputs together at 50% each for a 45deg "X" orientation of flight
+// motor names don't make sense anymore as they are front-left, front-righ, rear-left, rear-right.
+// PID outputs need to be limited so that they don't fall below the Igas parameter in the subtration 
+// and cause an imbalance in the thrust betwen the forward and reverse running motors in term causing 
+// an unintened yaw 
+
+		A = (Nl - Rl )/2;  // for CW rotating nmotors 
+		B = (Nl + Rl )/2;  // for CCW ro
+
+		if ( A > IGas )
+			A = IGas;
+		else if ( A < -IGas )
+			A = -IGas; 
+					
+		if (B > IGas )
+			B = IGas;
+		else if ( B <  -IGas )
+			B =  -IGas;
+
+//	PWM_Val[0] = M_rear;  // X-mode Rear-Right
+//	PWM_Val[1] = M_left;  // X-mode Rear-Left
+//	PWM_Val[2] = M_right; // x_mode Front-Right
+//	PWM_Val[3] = M_front; // X-mode Front-Left
+
+		Mh = IGas + B;		//cw Rear-Right
+		Ml = IGas + A; 		//ccw Rear-Left
+		Mr = IGas - A;		//ccw Front-Right
+		Mv = IGas - B;		//cw Front-Left
+	
+		
+		
+
 	}
 	else
 	{	// "Plus" Mode
 		//The normal way 
 		// limit so that substration of  Rl / Nl from Igas can't go below 0
+		// otherwise we incur an unintened yaw
 		
 		if ( Rl > IGas )
 			Rl = IGas;
@@ -233,7 +262,10 @@ Tl = IYaw;
 	}
 #endif
 
-	// Add in Idle and limit to valid PWM's
+// Add in Idle and limit to valid PWM's
+//NOTE:
+// if the PWM limit is readed in the following check then an unbalance is created in the trust
+// This is only a last chance check & limit, the code up to here has to make sure that we don't get into this situation	
 	M_front = 	LimitPWM(Mv + MotorLowRun); 
 	M_left = 	LimitPWM(Ml + MotorLowRun);
 	M_right = 	LimitPWM(Mr + MotorLowRun);
